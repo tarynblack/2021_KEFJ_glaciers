@@ -112,3 +112,27 @@ def normMeasureChange(glacier, measure, date_start=None, date_end=None):
     scaled_measure = (cumul_measure_change - min_measure) / \
         (max_measure - min_measure)
     return scaled_measure
+
+
+def fullTimeSeries(glacier, YEARS):
+    # construct list of years with -SPR or -AUT appended
+    SPR = [str(i)+'-SPR' for i in YEARS]
+    AUT = [str(i)+'-AUT' for i in YEARS]
+    y_seasons = [val for pair in zip(SPR, AUT) for val in pair]
+
+    # construct dataframe for storing information by year-season
+    all_lengths = pd.DataFrame(index=y_seasons, columns=['date', 'length', 'season', 'ldiff'])
+    dates = glacier.dates
+    dates_seasons = [str(d.year)+'-SPR' if d.month in [5,6] else str(d.year)+'-AUT' for d in dates]
+    ds_dates = pd.Series(dates.values, index=dates_seasons)
+    ds_dates = ds_dates.groupby(ds_dates.index).first()
+    ds_lengths = pd.Series(glacier.lengths.values, index=dates_seasons)
+    ds_lengths = ds_lengths.groupby(ds_lengths.index).first()
+    ds_seasons = pd.Series(glacier.extract('season').values, index=dates_seasons)
+    ds_seasons = ds_seasons.groupby(ds_seasons.index).first()
+    all_lengths['date'] = ds_dates
+    all_lengths['length'] = ds_lengths
+    all_lengths['season'] = ds_seasons
+    all_lengths['ldiff'] = all_lengths.length.diff().values
+
+    return all_lengths

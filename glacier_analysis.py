@@ -196,17 +196,32 @@ for id in GIDS:
     plt.savefig('{}{:02}_seasonlength.png'.format(outpath, id), \
         bbox_inches='tight', dpi=300)
 
-    # # Plot seasonal area change between each measurement
-    # fig = plt.figure()
-    # gp.seasonMeasureChange(fig, glacier, 'area', spring=True, autumn=True)
-    # plt.savefig('{}{:02}_seasonareachange.png'.format(outpath, id), \
-    #     bbox_inches='tight', dpi=300)
+    # Plot seasonal area change between each measurement
+    fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
+    gp.seasonMeasureChange(ax, glacier, 'area', spring=True, autumn=True)
+    ax.set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax.set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    plt.savefig('{}{:02}_seasonareachange.png'.format(outpath, id), \
+        bbox_inches='tight', dpi=300)
 
-    # # Plot seasonal length change between each measurement
-    # fig = plt.figure()
-    # gp.seasonMeasureChange(fig, glacier, 'length', spring=True, autumn=True)
-    # plt.savefig('{}{:02}_seasonlengthchange.png'.format(outpath, id), \
-    #     bbox_inches='tight', dpi=300)
+    # Plot seasonal length change between each measurement
+    fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
+    gp.seasonMeasureChange(ax, glacier, 'length', spring=True, autumn=True)
+    ax.set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax.set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    plt.savefig('{}{:02}_seasonlengthchange.png'.format(outpath, id), \
+        bbox_inches='tight', dpi=300)
+
+    # Plot difference between lengths, discontinuous across seasonal gaps
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(2*fig_width, fig_width))
+    ax = ax.flatten()
+    gp.lengthDiff(ax, glacier, YEARS)
+    ax[0].set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax[1].set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax[0].set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax[1].set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    plt.savefig('{}{:02}_discontinuous_seasonlengthchange.png'.format(outpath, id), \
+        bbox_inches='tight', dpi=300)
 
     # Plot decadal net area change
     fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
@@ -221,14 +236,14 @@ for id in GIDS:
         bbox_inches='tight', dpi=300)
 
     # # Plot annual area change for past two decades
-    # fig = plt.figure()
-    # gp.individualMeasureChange(fig, glacier, 'area', date_start='2000-01-01')
+    # fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
+    # gp.individualMeasureChange(ax, glacier, 'area')
     # plt.savefig('{}{:02}_indivareachange.png'.format(outpath, id), \
     #     bbox_inches='tight', dpi=300)
 
     # # Plot annual length change for past two decades
-    # fig = plt.figure()
-    # gp.individualMeasureChange(fig, glacier, 'length', date_start='2000-01-01')
+    # fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
+    # gp.individualMeasureChange(ax, glacier, 'length')
     # plt.savefig('{}{:02}_indivlengthchange.png'.format(outpath, id), \
     #     bbox_inches='tight', dpi=300)
 
@@ -245,6 +260,22 @@ for id in GIDS:
     ax.set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
     ax.set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
     plt.savefig('{}{:02}_areachangerate.png'.format(outpath, id), bbox_inches='tight', dpi=300)
+
+    # Plot relative length over time - in miles for StoryMap
+    fig, ax = plt.subplots(figsize=(10,10))
+    dates = glacier.extract('date') 
+    cumul_length, _, _ = gm.netMeasureChange(glacier, 'length')
+    cumul_length_mi = cumul_length / 1.609
+    name = gp.getGlacierName(glacier)
+    ax.plot(dates, cumul_length, 'o-', color='mediumblue', linewidth=4, markersize=10)
+    ax.set_title(f'{name} Length Change', fontsize=24, fontweight='bold')
+    ax.set_xlabel('Date', fontsize=20)
+    ax.set_ylabel('Miles', fontsize=20)
+    ax.set_xticks(pd.to_datetime(['1985-01-01', '1990-01-01', '1995-01-01', '2000-01-01', '2005-01-01', '2010-01-01', '2015-01-01', '2020-01-01']))
+    ax.set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
+    ax.tick_params(axis='both', labelsize=16)
+    plt.savefig('{}{:02}_storymap_length.png'.format(outpath, id), \
+        bbox_inches='tight', dpi=300, facecolor='white', transparent=False)
 
     plt.close('all')
     
@@ -265,19 +296,22 @@ for id in GIDS:
         cumul_lenchange, _, _ = gm.netMeasureChange(glacier, 'length')
         lenchange_rate_total = gm.rateMeasureChange(glacier, 'length')
 
-        f.write('Observed date range: {} to {}\n'.format(
-            change_dates[0], change_dates[1]))
-        f.write('Number of observations: {}\n'.format(num_obs))
-        f.write('Net length change: {:.3f} km\n'.format(
-            cumul_lenchange.iloc[-1]))
-        f.write('Net area change: {:.3f} km2\n'.format(
-            cumul_areachange.iloc[-1]))
-        f.write('Net termarea change: {:.3f} km2\n'.format(
-            cumul_termareachange.iloc[-1]))
-        f.write('Rate of area change: {:.3f} km2/yr\n'.format(
-            areachange_rate_total))
-        f.write('Rate of length change: {:.3f} km/yr\n\n'.format(
-            lenchange_rate_total))
+        # Calculate seasonal changes
+        all_lengths = gm.fullTimeSeries(glacier, YEARS)
+        aut_med = all_lengths[all_lengths.season == 'AUT'].ldiff.median(skipna=True)
+        aut_num = all_lengths[all_lengths.season == 'AUT'].ldiff.count()
+        spr_med = all_lengths[all_lengths.season == 'SPR'].ldiff.median(skipna=True)
+        spr_num = all_lengths[all_lengths.season == 'SPR'].ldiff.count()
+
+        f.write(f'Observed date range: {change_dates[0]} to {change_dates[1]}\n')
+        f.write(f'Number of observations: {num_obs}\n')
+        f.write(f'Net length change: {cumul_lenchange.iloc[-1]:.3f} km\n')
+        f.write(f'Net area change: {cumul_areachange.iloc[-1]:.3f} km2\n')
+        f.write(f'Net termarea change: {cumul_termareachange.iloc[-1]:.3f} km2\n')
+        f.write(f'Rate of area change: {areachange_rate_total:.3f} km2/yr\n')
+        f.write(f'Rate of length change: {lenchange_rate_total:.3f} km/yr\n')
+        f.write(f'Median autumn difference (rel to spring): {aut_med*1000:.0f}m (n={aut_num})\n')
+        f.write(f'Median spring difference (rel to autumn): {spr_med*1000:.0f}m (n={spr_num})\n\n')
 
         # Calculate net area change and average change rate for each decade
         for start_year in DECADES:
@@ -533,99 +567,152 @@ plt.close(fig)
 #%% PUBLICATION FIGURES
 
 # Plot all observations per glacier over time (scatter plot)
-fig, ax = plt.subplots(figsize=(fig_width, 0.85*fig_width))
-gp.glacierObservations(ax, all_glaciers)
+fig, ax = plt.subplots(figsize=(2*fig_width, 0.85*fig_width))
+yticklabs = []
+for g in all_glaciers:
+    glacier = all_glaciers[len(all_glaciers)+1-g]
+    name = gp.getGlacierName(glacier)
+    yticklabs.append(name)
+    glacierid = glacier.extract('gid')
+    obs_dates = glacier.extract('date')
+    seasons = glacier.extract('season')
+    ax.plot(obs_dates[seasons=='AUT'], len(all_glaciers)+1-glacierid[seasons=='AUT'], '.', color='darkorange', label='Autumn')
+    ax.plot(obs_dates[seasons=='SPR'], len(all_glaciers)+1-glacierid[seasons=='SPR'], '.', color='mediumseagreen', label='Spring')
+ax.set_xlabel('Date')
+ax.legend(handles=ax.get_lines()[0:2], ncol=2, loc='upper center', bbox_to_anchor=(0.5, -0.18))
+yticklocs = range(1, len(all_glaciers)+1)
+plt.yticks(yticklocs, yticklabs)
+plt.ylim(bottom=0)
+
 ax.set_xticks(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
 ax.set_xticklabels(['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'])
-plt.savefig('{}observation_timeseries.png'.format(outpath), \
+ax.set_ylabel(ax.get_ylabel(), visible=False)
+ax.set_title(ax.get_title(), visible=False)
+plt.savefig('{}fig3_observation_timeseries.png'.format(outpath), \
     bbox_inches='tight', dpi=300)
 plt.close(fig)
 
 # Plot lake-terminating area, length, decadal area, decadal length
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharex=True, figsize=(2*fig_width, fig_width))
 gp.measureSummary(ax1, all_glaciers, 'area', group=lake_terminating, \
-    subtitle='\nLake-terminating Glaciers', subplots=True, idx=121)
+    subtitle='\nLake-terminating Glaciers')
 gp.measureSummary(ax2, all_glaciers, 'length', group=lake_terminating, \
-    subtitle='\nLake-terminating Glaciers', subplots=True, idx=122)
+    subtitle='\nLake-terminating Glaciers')
 ax1.legend().remove()
 ax2.legend().remove()
 fig.legend(handles=ax1.get_lines(), ncol=3, loc='upper center', bbox_to_anchor=(0.5, -0.02))
-ax1.set_xlim(left='1980-01-01', right='2025-01-01')
-ax1.set_xticks(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01'])
+ax1.set_xlim(left=pd.to_datetime('1980-01-01'), right=pd.to_datetime('2025-01-01'))
+ax1.set_xticks(pd.to_datetime(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01']))
 ax1.set_xticklabels(['1980', '1990', '2000', '2010', '2020'])
-ax1.annotate(text='(a)', xy=(-0.15, 1.05), xycoords='axes fraction')
-ax2.annotate(text='(b)', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax1.set_title(ax1.get_title(), visible=False)
+ax2.set_title(ax2.get_title(), visible=False)
+ax1.annotate(text='a', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax2.annotate(text='b', xy=(-0.15, 1.05), xycoords='axes fraction')
 plt.tight_layout()
-plt.savefig('{}summary_subplots_lake.png'.format(outpath), bbox_inches='tight', dpi=300)
+plt.savefig('{}fig6_summary_subplots_lake.png'.format(outpath), bbox_inches='tight', dpi=300)
 plt.close(fig)
 
 # Plot land-terminating area, length, decadal area, decadal length
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharex=True, figsize=(2*fig_width, fig_width))
 gp.measureSummary(ax1, all_glaciers, 'area', group=land_terminating, \
-    subtitle='\nLand-terminating Glaciers', subplots=True, idx=121)
+    subtitle='\nLand-terminating Glaciers')
 gp.measureSummary(ax2, all_glaciers, 'length', group=land_terminating, \
-    subtitle='\nLand-terminating Glaciers', subplots=True, idx=122)
+    subtitle='\nLand-terminating Glaciers')
 ax1.legend().remove()
 ax2.legend().remove()
 fig.legend(handles=ax1.get_lines(), ncol=3, loc='upper center', bbox_to_anchor=(0.5, -0.02))
-ax1.set_xlim(left='1980-01-01', right='2025-01-01')
-ax1.set_xticks(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01'])
+ax1.set_xlim(left=pd.to_datetime('1980-01-01'), right=pd.to_datetime('2025-01-01'))
+ax1.set_xticks(pd.to_datetime(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01']))
 ax1.set_xticklabels(['1980', '1990', '2000', '2010', '2020'])
-ax1.annotate(text='(a)', xy=(-0.15, 1.05), xycoords='axes fraction')
-ax2.annotate(text='(b)', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax1.set_title(ax1.get_title(), visible=False)
+ax2.set_title(ax2.get_title(), visible=False)
+ax1.annotate(text='a', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax2.annotate(text='b', xy=(-0.15, 1.05), xycoords='axes fraction')
 plt.tight_layout()
-plt.savefig('{}summary_subplots_land.png'.format(outpath), bbox_inches='tight', dpi=300)
+plt.savefig('{}fig7_summary_subplots_land.png'.format(outpath), bbox_inches='tight', dpi=300)
 plt.close(fig)
 
 # Plot mixed-terminating area, length, decadal area, decadal length
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharex=True, figsize=(2*fig_width, fig_width))
 gp.measureSummary(ax1, all_glaciers, 'area', group=mixed_terminating, \
-    subtitle='\nMixed-terminating Glaciers', subplots=True, idx=121)
+    subtitle='\nMixed-terminating Glaciers')
 gp.measureSummary(ax2, all_glaciers, 'length', group=mixed_terminating, \
-    subtitle='\nMixed-terminating Glaciers', subplots=True, idx=122)
+    subtitle='\nMixed-terminating Glaciers')
 ax1.legend().remove()
 ax2.legend().remove()
 fig.legend(handles=ax1.get_lines(), ncol=3, loc='upper center', bbox_to_anchor=(0.5, -0.02))
-ax1.set_xlim(left='1980-01-01', right='2025-01-01')
-ax1.set_xticks(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01'])
+ax1.set_xlim(left=pd.to_datetime('1980-01-01'), right=pd.to_datetime('2025-01-01'))
+ax1.set_xticks(pd.to_datetime(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01']))
 ax1.set_xticklabels(['1980', '1990', '2000', '2010', '2020'])
-ax1.annotate(text='(a)', xy=(-0.15, 1.05), xycoords='axes fraction')
-ax2.annotate(text='(b)', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax1.set_title(ax1.get_title(), visible=False)
+ax2.set_title(ax2.get_title(), visible=False)
+ax1.annotate(text='a', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax2.annotate(text='b', xy=(-0.15, 1.05), xycoords='axes fraction')
 plt.tight_layout()
-plt.savefig('{}summary_subplots_mixed.png'.format(outpath), bbox_inches='tight', dpi=300)
+plt.savefig('{}fig8_summary_subplots_mixed.png'.format(outpath), bbox_inches='tight', dpi=300)
 plt.close(fig)
 
 # Plot tidewater area, length, decadal area, decadal length
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharex=True, figsize=(2*fig_width, fig_width))
 gp.measureSummary(ax1, all_glaciers, 'area', group=tidewater, \
-    subtitle='\nTidewater Glaciers', subplots=True, idx=121)
+    subtitle='\nTidewater Glaciers')
 gp.measureSummary(ax2, all_glaciers, 'length', group=tidewater, \
-    subtitle='\nTidewater Glaciers', subplots=True, idx=122)
+    subtitle='\nTidewater Glaciers')
 ax1.legend().remove()
 ax2.legend().remove()
 fig.legend(handles=ax1.get_lines(), ncol=3, loc='upper center', bbox_to_anchor=(0.5, -0.02))
-ax1.set_xlim(left='1980-01-01', right='2025-01-01')
-ax1.set_xticks(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01'])
+ax1.set_xlim(left=pd.to_datetime('1980-01-01'), right=pd.to_datetime('2025-01-01'))
+ax1.set_xticks(pd.to_datetime(['1980-01-01', '1990-01-01', '2000-01-01', '2010-01-01', '2020-01-01']))
 ax1.set_xticklabels(['1980', '1990', '2000', '2010', '2020'])
-ax1.annotate(text='(a)', xy=(-0.15, 1.05), xycoords='axes fraction')
-ax2.annotate(text='(b)', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax1.set_title(ax1.get_title(), visible=False)
+ax2.set_title(ax2.get_title(), visible=False)
+ax1.annotate(text='a', xy=(-0.15, 1.05), xycoords='axes fraction')
+ax2.annotate(text='b', xy=(-0.15, 1.05), xycoords='axes fraction')
 plt.tight_layout()
-plt.savefig('{}summary_subplots_tidewater.png'.format(outpath), bbox_inches='tight', dpi=300)
+plt.savefig('{}fig5_summary_subplots_tidewater.png'.format(outpath), bbox_inches='tight', dpi=300)
 plt.close(fig)
+
+# Plot median seasonal differences
+fig, ax = plt.subplots(figsize=(fig_width, 0.625*fig_width))
+for id in GIDS:
+    glacier = all_glaciers[id]
+    all_lengths = gm.fullTimeSeries(glacier, YEARS)
+    aut_avg = all_lengths[all_lengths.season == 'AUT'].ldiff.median(skipna=True)
+    spr_avg = all_lengths[all_lengths.season == 'SPR'].ldiff.median(skipna=True)
+    ann_var = spr_avg - aut_avg
+    if id in lake_terminating:
+        color = 'royalblue'
+        marker = 'o'
+        label = 'Lake-terminating'
+    elif id in tidewater:
+        color = 'mediumseagreen'
+        marker = 's'
+        label = 'Tidewater'
+    elif id in land_terminating:
+        color = 'darkorange'
+        marker = '^'
+        label = 'Land-terminating'
+    elif id in mixed_terminating:
+        color = 'darkorchid'
+        marker = 'D'
+        label = 'Mixed-terminating'
+    ax.scatter(spr_avg*1000, aut_avg*1000, color=color, marker=marker, label=label)
+# add shading to indicate image resolution limits
+ax.axhspan(ymin=-15, ymax=15, facecolor='silver', alpha=0.5, zorder=0.75)
+ax.axvspan(xmin=-15, xmax=15, facecolor='silver', alpha=0.5, zorder=0.75)
+ax.set_xlabel('Median winter length change (m)')
+ax.set_ylabel('Median summer length change (m)')
+ax.axhline(0, color='darkgray', zorder=0.75)
+ax.axvline(0, color='darkgray', zorder=0.75)
+# custom legend
+handles, labels = ax.get_legend_handles_labels()
+first_ids = sorted([lake_terminating[0]-1, tidewater[0]-1, land_terminating[0]-1, mixed_terminating[0]-1])
+first_ids
+unique_handles = [handles[i] for i in first_ids]
+unique_labels = [labels[i] for i in first_ids]
+ax.legend(unique_handles, unique_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+plt.savefig(f'{outpath}fig9_median_seasonal_variability.png', bbox_inches='tight', dpi=300)
+
 
 print('Done.')
 
-
-
-# for g in [1, 3, 18]:
-#     plt.scatter(all_glaciers[g].termareas, (all_glaciers[g].areas - all_glaciers[g].termareas), c='blue')
-# for g in [2, 4, 8, 9, 10, 15]:
-#     plt.scatter(all_glaciers[g].termareas, (all_glaciers[g].areas - all_glaciers[g].termareas), c='green')
-# for g in [7, 13, 14, 16, 17]:
-#     plt.scatter(all_glaciers[g].termareas, (all_glaciers[g].areas - all_glaciers[g].termareas), c='orange')
-# for g in [5, 6, 11, 12, 19]:
-#     plt.scatter(all_glaciers[g].termareas, (all_glaciers[g].areas - all_glaciers[g].termareas), c='gray')
-# plt.xlim([0,5])
-# plt.ylim([0,3])
-
-# %%

@@ -83,39 +83,12 @@ def designProperties():
     mpl.rcParams['axes.grid'] = True
     mpl.rcParams['grid.color'] = 'lightgray'
 
+    # set mathematical notation to be regular, not italicized
+    mpl.rcParams['mathtext.default'] = 'regular'
+
 
 def zeroLine(ax):
     ax.axhline(linewidth=0.75, color='darkgray', zorder=0.75)
-
-
-# def figureProperties(fig, ax, graph):
-    # mpl.rcParams['font.family'] = 'serif'
-    # mpl.rcParams['font.serif'] = ['optima']
-    # figwidth = 3.38
-    # linewidth = 1
-    # markersize = 3
-    # titlesize = 10
-    # labelsize = 10
-    # ticklabelsize = 9
-    # if ax.get_legend() != None:
-        # legendsize = 9
-    
-    # fig.set(figwidth=figwidth, figheight=.625*figwidth)
-
-    # ax.axes.title.set_fontsize(titlesize)
-    # ax.xaxis.label.set_fontsize(labelsize)
-    # ax.yaxis.label.set_fontsize(labelsize)
-    # ax.tick_params(labelsize=ticklabelsize)
-    # ax.grid(color='lightgray')
-    # if ax.get_legend() != None:
-        # ax.legend(fontsize=legendsize)
-    # ax.axhline(linewidth=0.75, color='black')
-    # ax.set_zorder(0)
-
-    # if type(graph) == mpl.lines.Line2D:
-        # graph.set_zorder(5)
-        # graph.set_linewidth(linewidth)
-        # graph.set_markersize(markersize)
 
 
 def manageSubplots(fig, subplot_bool, idx):
@@ -276,18 +249,16 @@ def individualMeasureChange(ax, glacier, measure, \
     date_start=None, date_end=None, subplots=False, idx=111):
     check_measure(measure)
     
-    # ax = manageSubplots(fig, subplots, idx)
     measures, dates = gm.filterByDates(glacier, measure, date_start, date_end)
     measure_change = measures.diff()
     name = getGlacierName(glacier)
 
-    graph = ax.bar(dates, measure_change, width=75, color='mediumblue')
+    ax.plot(dates, measure_change, color='darkgray')
     ax.set_title('{}: {} Change Between Observations'.format(
         name, measure.capitalize()))
     ax.set_xlabel('Date')
     ax.set_ylabel('{} change ({})'.format(
         measure.capitalize(), measure_units[measure]))
-    # figureProperties(fig, ax, graph)
 
 
 def decadalMeasureChange(ax, glacier, measure, decade_startyears, \
@@ -331,57 +302,87 @@ def decadalMeasureChange(ax, glacier, measure, decade_startyears, \
     ax.grid(axis='x')
 
 
-def seasonMeasureChange(fig, glacier, measure, \
-    spring=False, summer=False, autumn=False, winter=False, \
-    subplots=False, idx=111):
+def seasonMeasureChange(ax, glacier, measure, \
+    spring=False, summer=False, autumn=False, winter=False):
     check_measure(measure)
     
-    ax = manageSubplots(fig, subplots, idx)
     dates = glacier.extract('date')
     measures = glacier.extract(measure)
+    measures_change = measures.diff()
     seasons = glacier.extract('season')
     name = getGlacierName(glacier)
-
+    ax.plot(dates, measures_change, color='darkgray')
+    
     if spring:
-        dates_spr, measures_spr = getSeasonMeasures(
-            dates, measures, seasons, 'SPR')
-        dates_spr_change = dates_spr[dates_spr.notna()]
-        measures_spr_change = measures_spr[measures_spr.notna()].diff()
-        graph = ax.bar(dates_spr_change, measures_spr_change, \
-            width=75, color=season_c['spring'], label='Spring')
-        # figureProperties(fig, ax, graph)
+        # dates_spr, measures_spr = getSeasonMeasures(
+        #     dates, measures, seasons, 'SPR')
+        # dates_spr_change = dates_spr[dates_spr.notna()]
+        # measures_spr_change = measures_spr[measures_spr.notna()].diff()
+        # ax.bar(dates_spr_change, measures_spr_change, \
+        #     width=75, color=season_c['spring'], label='Spring')
+        dates_spr_change = dates[seasons == 'SPR']
+        measures_spr_change = measures_change[seasons == 'SPR']
+        ax.scatter(dates_spr_change, measures_spr_change, color=season_c['spring'], label='Spring')
     if summer:
-        dates_sum, measures_sum = getSeasonMeasures(
-            dates, measures, seasons, 'SUM')
-        dates_sum_change = dates_sum[dates_sum.notna()]
-        measures_sum_change = measures_sum[measures_sum.notna()].diff()
-        graph = ax.bar(dates_sum_change, measures_sum_change, \
-            width=75, color=season_c['summer'], label='Summer')
-        # figureProperties(fig, ax, graph)
+        # dates_sum, measures_sum = getSeasonMeasures(
+        #     dates, measures, seasons, 'SUM')
+        # dates_sum_change = dates_sum[dates_sum.notna()]
+        # measures_sum_change = measures_sum[measures_sum.notna()].diff()
+        # ax.bar(dates_sum_change, measures_sum_change, \
+        #     width=75, color=season_c['summer'], label='Summer')
+        dates_sum_change = dates[seasons == 'SUM']
+        measures_sum_change = measures_change[seasons == 'SUM']
+        ax.scatter(dates_sum_change, measures_sum_change, color=season_c
+        ['summer'], label='Summer')
     if autumn:
-        dates_aut, measures_aut = getSeasonMeasures(
-            dates, measures, seasons, 'AUT')
-        dates_aut_change = dates_aut[dates_aut.notna()]
-        measures_aut_change = measures_aut[measures_aut.notna()].diff()
-        graph = ax.bar(dates_aut_change, measures_aut_change, \
-            width=75, color=season_c['autumn'], label='Autumn')
-        # figureProperties(fig, ax, graph)
+        # dates_aut, measures_aut = getSeasonMeasures(
+        #     dates, measures, seasons, 'AUT')
+        # dates_aut_change = dates_aut[dates_aut.notna()]
+        # measures_aut_change = measures_aut[measures_aut.notna()].diff()
+        # ax.bar(dates_aut_change, measures_aut_change, \
+        #     width=75, color=season_c['autumn'], label='Autumn')
+        dates_aut_change = dates[seasons == 'AUT']
+        measures_aut_change = measures_change[seasons == 'AUT']
+        ax.scatter(dates_aut_change, measures_aut_change, color=season_c['autumn'], label='Autumn')
     if winter:
-        dates_win, measures_win = getSeasonMeasures(
-            dates, measures, seasons, 'WIN')
-        dates_win_change = dates_win[dates_win.notna()]
-        measures_win_change = measures_win[measures_win.notna()].diff()
-        graph = ax.bar(dates_win_change, measures_win_change, \
-            width=75, color=season_c['winter'], label='Winter')
-        # figureProperties(fig, ax, graph)
+        # dates_win, measures_win = getSeasonMeasures(
+        #     dates, measures, seasons, 'WIN')
+        # dates_win_change = dates_win[dates_win.notna()]
+        # measures_win_change = measures_win[measures_win.notna()].diff()
+        # ax.bar(dates_win_change, measures_win_change, \
+        #     width=75, color=season_c['winter'], label='Winter')
+        dates_win_change = dates[seasons == 'WIN']
+        measures_win_change = measures_change[seasons == 'WIN']
+        ax.scatter(dates_win_change, measures_win_change, color=season_c
+        ['winter'], label='Winter')
     
     ax.set_title('{}: Observed Seasonal {} Change'.format(
         name, measure.capitalize()))
     ax.set_xlabel('Date')
     ax.set_ylabel('{} change ({})'.format(
         measure.capitalize(), measure_units[measure]))
+    zeroLine(ax)
     ax.legend()
-    # figureProperties(fig, ax, graph)
+
+
+def lengthDiff(ax, glacier, YEARS):
+    name = getGlacierName(glacier)
+
+    all_lengths = gm.fullTimeSeries(glacier, YEARS)
+
+    # plot length and length-difference over time with NaN holes for no observation
+    # -- plot length
+    ax[0].plot(all_lengths.date, all_lengths.length, color='darkgray')
+    ax[0].scatter(all_lengths[all_lengths.season == 'SPR'].date, all_lengths[all_lengths.season == 'SPR'].length, color=season_c['spring'], label='Spring')
+    ax[0].scatter(all_lengths[all_lengths.season == 'AUT'].date, all_lengths[all_lengths.season == 'AUT'].length, color=season_c['autumn'], label='Autumn')
+    ax[0].set_title(f'{name}: Length')
+    ax[0].legend()
+    # -- plot diff
+    ax[1].plot(all_lengths.date, all_lengths.ldiff, color='darkgray')
+    ax[1].scatter(all_lengths[all_lengths.season == 'SPR'].date, all_lengths[all_lengths.season == 'SPR'].ldiff, color=season_c['spring'], label='Spring')
+    ax[1].scatter(all_lengths[all_lengths.season == 'AUT'].date, all_lengths[all_lengths.season == 'AUT'].ldiff, color=season_c['autumn'], label='Autumn')
+    ax[1].set_title(f'{name}: Diff between lengths')
+    zeroLine(ax[1])
 
 
 def meanChangeRate(ax, glacier, measure, rolling_years):
@@ -405,33 +406,29 @@ def meanChangeRate(ax, glacier, measure, rolling_years):
     ax.legend()
 
 
-def glacierObservations(ax, all_glaciers, subplots=False, idx=111):
-    # ax = manageSubplots(fig, subplots, idx)
+def glacierObservations(ax, all_glaciers):
     yticklabs = []
-
     for g in all_glaciers:
         glacier = all_glaciers[g]
         name = getGlacierName(glacier)
         yticklabs.append(name)
         glacierid = glacier.extract('gid')
         obs_dates = glacier.extract('date')
-        graph = ax.plot(obs_dates, glacierid, '.', color='mediumblue')
-        # figureProperties(fig, ax, graph)
+        seasons = glacier.extract('season')
+        # ax.plot(obs_dates, glacierid, '.', color='mediumblue')
+        ax.plot(obs_dates[seasons=='AUT'], glacierid[seasons=='AUT'], '.', color='darkorange', label='Autumn')
+        ax.plot(obs_dates[seasons=='SPR'], glacierid[seasons=='SPR'], '.', color='mediumseagreen', label='Spring')
     ax.set_title('Observation Time Series for Each Glacier')
     ax.set_xlabel('Date')
     ax.set_ylabel('Glacier')
+    ax.legend(handles=ax.get_lines()[0:2], ncol=2, loc='upper center', bbox_to_anchor=(0.5, -0.18))
     yticklocs = range(1, len(all_glaciers)+1)
     plt.yticks(yticklocs, yticklabs)
     plt.ylim(bottom=0)
 
-    # figureProperties(fig, ax, graph)
 
-
-def measureSummary(ax, all_glaciers, measure, group, subtitle=None,
-    subplots=False, idx=111):
+def measureSummary(ax, all_glaciers, measure, group, subtitle=None):
     check_measure(measure)
-
-    # ax = manageSubplots(fig, subplots, idx)
 
     for g in all_glaciers:
         if g in group:
@@ -444,22 +441,17 @@ def measureSummary(ax, all_glaciers, measure, group, subtitle=None,
                 label=name)
             # figureProperties(fig, ax, graph)
         
-    ax.set_title('Summary of Observed {} Changes{}'.format(
-        measure.capitalize(), subtitle.title()))
+    ax.set_title('Summary of observed {} changes{}'.format(
+        measure, subtitle.title()))
     ax.set_xlabel('Date')
-    ax.set_ylabel('Cumulative {} Change ({})'.format(
-        measure.capitalize(), measure_units[measure]))
+    ax.set_ylabel('Cumulative {} change ({})'.format(
+        measure, measure_units[measure]))
     ax.legend(loc='center left', bbox_to_anchor=(1.04, 0.5))
     zeroLine(ax)
-    # figureProperties(fig, ax, graph)
-    # return ax
 
 
-def normMeasureSummary(ax, all_glaciers, measure, group, subtitle=None, 
-    subplots=False, idx=111):
+def normMeasureSummary(ax, all_glaciers, measure, group, subtitle=None):
     check_measure(measure)
-
-    # ax = manageSubplots(fig, subplots, idx)
 
     for g in all_glaciers:
         if g in group:
@@ -470,7 +462,6 @@ def normMeasureSummary(ax, all_glaciers, measure, group, subtitle=None,
             graph, = ax.plot(dates, scaled_measure,
                 glacier_design[g]['s'], color=glacier_design[g]['c'],
                 label=name)
-            # figureProperties(fig, ax, graph)
         
     ax.set_title('Summary of Observed {} Changes, Normalized{}'.format(
         measure.capitalize(), subtitle.title()))
@@ -479,4 +470,4 @@ def normMeasureSummary(ax, all_glaciers, measure, group, subtitle=None,
     plt.ylim(-0.02, 1.02)
     ax.legend(loc='center left', bbox_to_anchor=(1.04, 0.5))
     zeroLine(ax)
-    # figureProperties(fig, ax, graph)
+
